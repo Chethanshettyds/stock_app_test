@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Details</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #1c1c1c, #3a3a3a);
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #company-name {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #ffcc00, #ff6600);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #company-details {
+            font-size: 1.2rem;
+            color: #ddd;
+        }
+
+        .tradingview-widget-container {
+            display: none; /* Hidden by default */
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            width: 100%;
+            height: 430px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="glass-container">
+            <h2 id="company-name"></h2>
+            <p id="company-details"></p>
+        </div>
+
+        <!-- TradingView Chart Container -->
+        <div class="tradingview-widget-container" id="chart-container">
+            <div id="tradingview_chart"></div>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        let companyName = params.get('name') ? decodeURIComponent(params.get('name')).trim() : "";
+    
+        console.log("Extracted Company Name:", companyName);
+    
+        const companyDetails = {
+            "MRF Tyres Ltd": "MRF Ltd. is India's largest tire manufacturer, known for its premium-quality tires, and its stock is one of the most expensive in the Indian stock market.",
+            "Affle (India) Ltd": "Affle (India) Limited provides mobile advertisement services globally.",
+            "Infosys Ltd": "Infosys Limited is an Indian multinational technology company.",
+            "Reliance Industries Ltd": "Reliance Industries Limited is an Indian multinational conglomerate.",
+            "HDFC Bank Ltd": "HDFC Bank Limited is India's largest private sector bank by assets.",
+            "CANARA Bank Ltd": "Canara Bank is an Indian public sector bank based in Bangalore, India. Established in 1906 at Mangalore by Ammembal Subba Rao Pai.",
+            "Jai Prakash Power Ltd": "Jaiprakash Power Limited engages in the power generation and cement grinding businesses in India and internationally.",
+            "Indian Renewable Energy Development Agency Limited (IREDA)": "IREDA is an Indian public sector enterprise which provides financial assistance and other services to projects related to renewable sources of energy and energy efficiency/conservation.",
+            "Sterling & Wilson Solar Ltd": "In 1971, Wilson Electric Works merged with Sterling Investments, a group company of the Shapoorji Pallonji Group, to form an EPC powerhouse called Sterling and Wilson.",
+            "Indian Railway Catering and Tourism Corporation Ltd": "Indian Railway Catering and Tourism Corporation (IRCTC) is an Indian public sector undertaking that provides ticketing, catering, and tourism services for the state-owned Indian Railways."
+        };
+    
+        // TradingView symbols for specific companies
+        const companySymbols = {
+            "Affle (India) Ltd": "BSE:AFFLE",
+            "MRF Tyres Ltd": "BSE:MRF",
+            "Infosys Ltd": "BSE:INFY",
+            "Reliance Industries Ltd": "BSE:RELIANCE",
+            "HDFC Bank Ltd": "BSE:HDFCBANK",
+            "CANARA Bank Ltd": "BSE:CANBK",
+            "Jai Prakash Power Ltd": "BSE:JPPOWER",
+            "Indian Renewable Energy Development Agency Limited (IREDA)": "BSE:IREDA",
+            "Sterling & Wilson Solar Ltd": "BSE:SWSOLAR",
+            "Indian Railway Catering and Tourism Corporation Ltd": "BSE:IRCTC"
+        };
+    
+        // Update company details
+        const normalizedCompanyName = companyName.trim();
+        document.getElementById('company-name').innerText = companyName || "Company Name Not Found";
+        document.getElementById('company-details').innerText = companyDetails[normalizedCompanyName] || "Details not available.";
+    
+        // Get chart container
+        const chartContainer = document.getElementById('chart-container');
+    
+        function loadTradingViewChart(symbol) {
+            if (!symbol) {
+                console.warn("TradingView chart is only available for Affle (India) Ltd and MRF Tyres Ltd.");
+                chartContainer.style.display = "none"; // Hide chart for other companies
+                return;
+            }
+    
+            console.log("Loading chart for:", symbol);
+            chartContainer.style.display = "block"; // Show chart
+    
+            // Remove any existing script to prevent duplicates
+            const existingScript = document.querySelector("script[src*='tradingview']");
+            if (existingScript) {
+                existingScript.remove();
+                document.getElementById('tradingview_chart').innerHTML = ''; // Clear old widget
+            }
+    
+            let script = document.createElement('script');
+            script.type = "text/javascript";
+            script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+            script.async = true;
+            script.innerHTML = JSON.stringify({
+                "width": "100%",
+                "height": 400,
+                "autosize": true,
+                "symbol": symbol,
+                "interval": "D",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "hide_top_toolbar": true,
+                "hide_legend": true,
+                "allow_symbol_change": false,
+                "save_image": false,
+                "calendar": false,
+                "hide_volume": true,
+                "support_host": "https://www.tradingview.com"
+            });
+    
+            document.getElementById('tradingview_chart').appendChild(script);
+        }
+    
+        // ✅ Only load the chart for Affle and MRF
+        if (companySymbols[normalizedCompanyName]) {
+            chartContainer.style.display = "block"; // Show for Affle & MRF
+            setTimeout(() => {
+                loadTradingViewChart(companySymbols[normalizedCompanyName]);
+            }, 500);
+        } else {
+            chartContainer.style.display = "none"; // Hide chart for other companies
+            document.getElementById('tradingview_chart').innerHTML = ''; // Remove old chart data
+            console.log("Chart not available for this company.");
+        }
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,13 @@
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+#company-list {
+  max-height: 400px;
+  overflow-y: auto;
+}

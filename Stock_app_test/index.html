@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Load Chart.js & Financial Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden; /* Prevents scrolling */
+        }
+
+        /* Canvas for animated wallpaper */
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Ensures it stays behind all content */
+            background: radial-gradient(circle, #1c1c1c, #0a0a0a);
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .company-list {
+            padding: 15px;
+        }
+
+        .company-list h4 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .list-group-item {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .list-group-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .chart-container {
+            padding: 20px;
+            height: 450px;
+        }
+
+        .chart-container h4 {
+            color: #fff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Canvas -->
+    <canvas id="backgroundCanvas"></canvas>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="glass-container company-list">
+                    <h4>Companies</h4>
+                    <ul id="company-list" class="list-group">
+                        <li class="list-group-item" onclick="navigateToCompany('MRF')">MRF</li>
+                        <li class="list-group-item" onclick="navigateToCompany('AFFLE')">AFFLE</li>
+                        <li class="list-group-item" onclick="navigateToCompany('INFOSYS')">INFOSYS</li>
+                        <li class="list-group-item" onclick="navigateToCompany('RELIANCE')">RELIANCE</li>
+                        <li class="list-group-item" onclick="navigateToCompany('HDFC BANK')">HDFC BANK</li>
+                        <li class="list-group-item" onclick="navigateToCompany('CANARA BANK')">CANARA BANK</li>
+                        <li class="list-group-item" onclick="navigateToCompany('JP POWER')">JP POWER</li>
+                        <li class="list-group-item" onclick="navigateToCompany('IREDA')">IREDA</li>
+                        <li class="list-group-item" onclick="navigateToCompany('SW SOLAR')">SW SOLAR</li>
+                        <li class="list-group-item" onclick="navigateToCompany('IRCTC')">IRCTC</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="glass-container chart-container">
+                    <h4>Stock Market Trends (Live)</h4>
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateToCompany(company) {
+            const companyMapping = {
+                "MRF": "MRF Tyres Ltd",
+                "AFFLE": "Affle (India) Ltd",
+                "INFOSYS": "Infosys Ltd",
+                "RELIANCE": "Reliance Industries Ltd",
+                "HDFC BANK": "HDFC Bank Ltd",
+                "CANARA BANK": "CANARA Bank Ltd",
+                "JP POWER": "Jai Prakash Power Ltd",
+                "IREDA": "Indian Renewable Energy Development Agency Limited (IREDA)",
+                "SW SOLAR": "Sterling & Wilson Solar Ltd",
+                "IRCTC": "Indian Railway Catering and Tourism Corporation Ltd"
+            };
+
+            const fullCompanyName = companyMapping[company] || company;
+            window.location.href = `company.html?name=${encodeURIComponent(fullCompanyName)}`;
+        }
+
+        let ctx = document.getElementById('stockChart').getContext('2d');
+
+        let stockChart = new Chart(ctx, {
+            type: 'candlestick',
+            data: {
+                datasets: [{
+                    label: "Stock Price",
+                    data: [],
+                    borderColor: "#ffcc00",
+                    backgroundColor: "rgba(255, 204, 0, 0.3)"
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        },
+                        ticks: { color: 'white' }
+                    },
+                    y: {
+                        ticks: { color: 'white' }
+                    }
+                }
+            }
+        });
+
+        function generateCandlestickData() {
+            let newData = [];
+            let basePrice = 100;
+
+            for (let i = 0; i < 20; i++) {
+                let open = basePrice + (Math.random() * 10 - 5);
+                let close = open + (Math.random() * 6 - 3);
+                let high = Math.max(open, close) + Math.random() * 3;
+                let low = Math.min(open, close) - Math.random() * 3;
+
+                newData.push({
+                    x: new Date().getTime() + i * 60000, 
+                    o: open,
+                    h: high,
+                    l: low,
+                    c: close
+                });
+
+                basePrice = close;
+            }
+
+            stockChart.data.datasets[0].data = newData;
+            stockChart.update();
+        }
+
+        setInterval(generateCandlestickData, 2000);
+
+        // Animated Background Effect
+        const canvas = document.getElementById("backgroundCanvas");
+        const ctxBg = canvas.getContext("2d");
+
+        let particles = [];
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.size = Math.random() * 4 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.speedY = Math.random() * 2 - 1;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > w || this.x < 0) this.speedX *= -1;
+                if (this.y > h || this.y < 0) this.speedY *= -1;
+            }
+
+            draw() {
+                ctxBg.fillStyle = "rgba(255, 255, 255, 0.7)";
+                ctxBg.beginPath();
+                ctxBg.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctxBg.closePath();
+                ctxBg.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctxBg.clearRect(0, 0, w, h);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener("resize", () => {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        initParticles();
+        animateParticles();
+    </script>
+</body>
+</html>
